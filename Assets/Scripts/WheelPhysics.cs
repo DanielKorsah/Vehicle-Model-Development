@@ -24,6 +24,7 @@ public class WheelPhysics : MonoBehaviour
 
     private Vector3 overallForce;
     private Rigidbody vehicleRigidbody;
+    public float radius;
 
     private void Start()
     {
@@ -45,11 +46,10 @@ public class WheelPhysics : MonoBehaviour
         // Does the ray intersect any objects excluding the player layer
         if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out hit, groundContactRayLength))
         {
-            Debug.Log("Rayhit");
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.down) * groundContactRayLength, Color.white);
         
             CalculateSuspension(hit.distance);
-            CalculateSteeringForce();
+            CalculateSteeringForce(hit.distance);
             CalculateDrive();
             DownForce(hit.distance);
             ApplyForce();
@@ -112,8 +112,10 @@ public class WheelPhysics : MonoBehaviour
     }
 
     
-    private void CalculateSteeringForce()
+    private void CalculateSteeringForce(float rayHitDistance)
     {
+        if (rayHitDistance > radius)
+            return;
         float gripValue = SteeringGrip;
         
         if (Input.GetAxis("Handbrake") > 0)
