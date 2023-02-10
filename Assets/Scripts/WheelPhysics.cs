@@ -9,6 +9,8 @@ public class WheelPhysics : MonoBehaviour
     public float RestDistance;
     public float SpringStrength;
     public float SpringDamper;
+    public GameObject Graphic;
+    
     
     public float SteeringGrip;
     public float WheelMass;
@@ -23,12 +25,14 @@ public class WheelPhysics : MonoBehaviour
     public double DownForceThreshold;
 
     private Vector3 overallForce;
+    private Vector3 originalGraphicLocalPosition;
     private Rigidbody vehicleRigidbody;
     public float radius;
 
     private void Start()
     {
         vehicleRigidbody = vehicle.GetComponent<Rigidbody>();
+        originalGraphicLocalPosition = Graphic.transform.localPosition;
     }
 
     void FixedUpdate()
@@ -50,7 +54,7 @@ public class WheelPhysics : MonoBehaviour
         
             CalculateSuspension(hit.distance);
             CalculateSteeringForce(hit.distance);
-            CalculateDrive();
+            CalculateDrive(hit.distance);
             DownForce(hit.distance);
             ApplyForce();
         }
@@ -99,6 +103,9 @@ public class WheelPhysics : MonoBehaviour
         Vector3 wheelWorldVelocity = vehicleRigidbody.GetPointVelocity(transform.position);
         float offset = RestDistance - rayHitDistance;
 
+        //Set the visual wheels to match the free floating suspension.
+        Graphic.transform.localPosition = originalGraphicLocalPosition + offset * springDirection;
+
         //project the magnitude of the velocity onto the vertical axis
         float suspensionTravelVelocity = Vector3.Dot(springDirection, wheelWorldVelocity);
 
@@ -114,7 +121,7 @@ public class WheelPhysics : MonoBehaviour
     
     private void CalculateSteeringForce(float rayHitDistance)
     {
-        if (rayHitDistance > radius)
+        if (rayHitDistance > radius * 1.2f)
             return;
         float gripValue = SteeringGrip;
         
@@ -145,8 +152,11 @@ public class WheelPhysics : MonoBehaviour
 
     }
 
-    private void CalculateDrive()
+    private void CalculateDrive(float rayHitDistance)
     {
+        if (rayHitDistance > radius * 1.2f)
+            return;
+        
         Vector3 accelerationDirection = transform.forward;
 
         float accelerationInput = Input.GetAxis("Vertical");
